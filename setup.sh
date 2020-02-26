@@ -69,10 +69,16 @@ install_archive()
         rm -rf "${PREFIX}/lib/bpm"
     fi
 
-    cp -rv "${BPM_TMP}/bpm-${BPM_BRANCH}/bin" "${PREFIX}/lib/bpm"
-    # cp -rp "${BPM_TMP}/bpm-${BPM_BRANCH}/lib" "${PREFIX}/lib/bpm"
+   ls -la "${BPM_TMP}/bpm-${BPM_BRANCH}"
 
-    # ln -fs "${PREFIX}/lib/bpm/bin/bpm" "${PREFIX}/bin/bpm"
+   ls -la "${BPM_TMP}/bpm-${BPM_BRANCH}/bin"
+   ls -la "${BPM_TMP}/bpm-${BPM_BRANCH}/lib"
+   exit 0
+
+    mv "${BPM_TMP}/bpm-${BPM_BRANCH}/bin" "${PREFIX}/lib/bpm/"
+    mv "${BPM_TMP}/bpm-${BPM_BRANCH}/lib" "${PREFIX}/lib/bpm"
+
+    ln -fs "${PREFIX}/lib/bpm/bin/bpm" "${PREFIX}/bin/bpm"
 }
 
 main()
