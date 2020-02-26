@@ -26,7 +26,7 @@ BPM_EUID="$(id -u)"
 ##
 set_prefix()
 {
-    if [[ -n "${PREFIX}" ]]; then
+    if [[ -n "${PREFIX}" && ${PREFIX} != "" && "${PREFIX}" != "/" ]]; then
         return
     fi
 
@@ -53,18 +53,26 @@ download_archive()
         exit 1
     fi
 
-    cd "${BPM_TMP}"
+    cd "${BPM_TMP}" || exit 1
 
     unzip "${BPM_TMP}/archive.zip"
 }
 
 install_archive()
 {
-    cd "${BPM_TMP}/bpm-${BPM_BRANCH}"
+    cd "${BPM_TMP}/bpm-${BPM_BRANCH}" || exit 1
 
-    install -d "bin/bpm" "${PREFIX}/bin"
-    install -d "bin" "${PREFIX}/lib/bpm"
-    install -d "lib" "${PREFIX}/lib/bpm"
+    mkdir -p "${PREFIX}/bin"
+    mkdir -p "${PREFIX}/lib/bpm"
+
+    if [[ -d "${PREFIX}/lib/bpm" ]]; then
+        rm -rf "${PREFIX}/lib/bpm"
+    fi
+
+    cp -rv "${BPM_TMP}/bpm-${BPM_BRANCH}/bin" "${PREFIX}/lib/bpm"
+    # cp -rp "${BPM_TMP}/bpm-${BPM_BRANCH}/lib" "${PREFIX}/lib/bpm"
+
+    # ln -fs "${PREFIX}/lib/bpm/bin/bpm" "${PREFIX}/bin/bpm"
 }
 
 main()

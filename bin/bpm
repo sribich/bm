@@ -1,1 +1,3 @@
-../lib/bpm/bin/bpm
+#!/usr/bin/env bash
+
+echo "hi"
