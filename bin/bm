@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+##
+## Author: Stephen Ribich <stephen@ribich.dev>
+## URL:    https://github.com/sribich/bm
+##
+##  /$$$$$$$   /$$      /$$
+## | $$__  $$ | $$$    /$$$
+## | $$  \ $$ | $$$$  /$$$$
+## | $$$$$$$  | $$ $$/$$ $$
+## | $$__  $$ | $$  $$$| $$
+## | $$  \ $$ | $$\  $ | $$
+## | $$$$$$$/ | $$ \/  | $$
+## |_______/  |__/     |__/
+##
+##       bash modules
+##
+## License: MIT
+##
+
+realpath()
+{
+    assert_no_path_cycles()
+    {
+        local path
+        local target="${1}"
+
+        shift
+
+        for path in "${@}"; do
+            if [[ "${path}" == "${target}" ]]; then
+                return 1
+            fi
+        done
+    }
+
+    prepend_dir_context()
+    {
+        if [[ "${1}" == "." ]]; then
+            printf "%s\n" "${2}"
+        else
+            case "${2}" in
+                /* ) printf "%s\n" "${2}" ;;
+                * )  printf "%s\n" "${1}/${2}" ;;
+            esac
+        fi
+    }
+
+    resolve_symlinks()
+    {
+        assert_no_path_cycles "$@" || return
+
+        local context
+        local path && path="$(readlink -- "${1}")"
+
+        if [[ "${?}" -eq 0 ]]; then
+            context="$(dirname -- "${1}")"
+
+            resolve_symlinks "$(prepend_dir_context "${context}" "${path}")" "${@}"
+        else
+            printf "%s\n" "${1}"
+        fi
+    }
+
+    realpath()
+    {
+        local path && path="$(resolve_symlinks "${1}")"
+
+        if [[ -d "${path}" ]]; then
+            (cd "${path}" 2>/dev/null && pwd -P)
+        else
+            local dir file
+            dir=$(dirname -- "${path}")
+            file=$(basename -- "${path}")
+            (cd "$dir" 2>/dev/null && printf '%s/%s\n' "$(pwd -P)" "$file")
+        fi
+    }
+
+    realpath "$@"
+}
+
+
+Bpm::Main()
+{
+    local command="${1:-}"; shift
+
+    if [[ -z "${command}" ]]; then
+        printf "Please specify a command. Use 'bpm help' to see a list of commands.\n" 1>&2
+        exit 127
+    fi
+
+    local path && path="$(realpath "${BASH_SOURCE[0]}")"
+    local dir="${path%/*}"
+
+    if [[ ! -f "${dir}/../lib/${command}" ]]; then
+        printf "Command '${command}' does not exist. Use 'bpm help' to see a list of commands.\n" 1>&2
+        exit 127
+    fi
+}
+
+Bpm::Main "$@"
+exit
